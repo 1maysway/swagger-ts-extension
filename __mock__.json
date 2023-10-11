@@ -1,0 +1,51 @@
+{
+  "AboutResponse": {
+    "type": "object",
+    "required": [
+      "aboutInterest",
+      "aboutRecommendationClasses",
+      "aboutRecommendationInterest",
+      "aboutReward"
+    ],
+    "properties": {
+      "aboutInterest": {
+        "description": "Объект анкеты интересов",
+        "$ref": "#/definitions/ResponseFilterWrapper«InterestResponse»"
+      },
+      "aboutRecommendationClasses": {
+        "description": "Объект рекомендаций: предпрофильных классов и образовательны вертикалей",
+        "$ref": "#/definitions/ResponseWrapper«RecommendationClassResponse»"
+      },
+      "aboutRecommendationInterest": {
+        "description": "Объект рекомендаций",
+        "$ref": "#/definitions/ResponseObjectWrapper«RecommendationInterestResponse»"
+      },
+      "aboutReward": {
+        "description": "Объект с наградами",
+        "$ref": "#/definitions/ResponseFilterWrapper«RewardResponse»"
+      }
+    },
+    "title": "AboutResponse"
+  },
+  "AcademicYearMarksResponse": {
+    "type": "object",
+    "properties": {
+      "first_half_year": {
+        "type": "string",
+        "description": "Год первой половины учебного года"
+      },
+      "marks": {
+        "type": "array",
+        "description": "Список оценок по предметам",
+        "items": {
+          "$ref": "#/definitions/SubjectFinalMarkResponse"
+        }
+      },
+      "second_half_year": {
+        "type": "string",
+        "description": "Год первой половины учебного года"
+      }
+    },
+    "title": "AcademicYearMarksResponse"
+  }
+}
