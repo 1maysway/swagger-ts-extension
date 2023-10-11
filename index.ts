@@ -1,15 +1,11 @@
+import axios from "axios";
+import {getTypescript} from "./utils";
+import {Entity__Type} from "./types";
+
 interface JsonData {
     [key: string]: any;
 }
 
-const jsonData: JsonData = {
-    items: { "$ref": "#/definitions/CalendarLessonResponse" },
-    definitions: {
-        CalendarLessonResponse: { a:'Aa' }
-    }
-};
-
-// Функция для разрешения JSON Reference
 function resolveJSONReference(data: JsonData, rootData: JsonData): JsonData {
     if (typeof data === 'object' && data !== null) {
         if (data['$ref']) {
@@ -34,7 +30,9 @@ function resolveJSONReference(data: JsonData, rootData: JsonData): JsonData {
     return data;
 }
 
+axios.get('https://dnevnik-dev-k8s.mos.ru/sw/plan/v2/api-docs').then(async (res) => {
+    const a = getTypescript(resolveJSONReference(res.data, res.data).paths['/jersey/api/schedule_items/{item_id}/accessible_teachers'].get.responses['200'].schema as Entity__Type);
 
-const resolvedData = resolveJSONReference(jsonData, jsonData);
-
-console.log(resolvedData);
+    // @ts-ignore
+    console.log(a);
+})
