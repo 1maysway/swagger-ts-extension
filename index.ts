@@ -31,8 +31,9 @@ function resolveJSONReference(data: JsonData, rootData: JsonData): JsonData {
 }
 
 axios.get('https://dnevnik-dev-k8s.mos.ru/sw/plan/v2/api-docs').then(async (res) => {
-    const a = getTypescript(resolveJSONReference(res.data, res.data).paths['/jersey/api/schedule_items/{item_id}/accessible_teachers'].get.responses['200'].schema as Entity__Type);
+    const a = getTypescript(resolveJSONReference(res.data, res.data).paths['/jersey/api/lesson_plans/{plan_id}'].put.responses['200'].schema as Entity__Type);
 
     // @ts-ignore
+    // console.log(a.find(a => a.name === "ChangeLog"));
     console.log(a);
 })

@@ -33,7 +33,9 @@ export interface EntityInteger {
     format: EntityInteger_Formats,
 }
 
-export interface EntityString {}
+export interface EntityString {
+    enum?: string[],
+}
 
 export interface EntityBoolean {}
 
@@ -69,7 +71,9 @@ export interface TypeObjArray {
     arrayType: string,
 }
 export interface TypeObjInteger {}
-export interface TypeObjString {}
+export interface TypeObjString {
+    enum?: string[],
+}
 export interface TypeObjBoolean {}
 
 export type TypeObjectMap = {
