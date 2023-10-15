@@ -17,10 +17,14 @@ export enum EntityInteger_Formats {
     INT32="int32",
 }
 
+export enum EntityString_Formats {
+    DATE="date",
+}
+
 export interface EntityObject_Properties extends Record<string, Entity__Type> {}
 export interface EntityObject {
     // required: keyof EntityObject_Properties,
-    properties: EntityObject_Properties,
+    properties?: EntityObject_Properties,
     title: string,
 }
 
@@ -35,6 +39,7 @@ export interface EntityInteger {
 
 export interface EntityString {
     enum?: string[],
+    format?: EntityString_Formats,
 }
 
 export interface EntityBoolean {}
@@ -88,4 +93,25 @@ export type TypeObj <T = EntityTypes> = {
     type: T,
     name?: string,
     typeName?: string,
-} & (T extends keyof TypeObjectMap ? TypeObjectMap[T] : {})
+} & (T extends keyof TypeObjectMap ? TypeObjectMap[T] : {});
+
+export type TypeObj__Type = TypeObj<EntityTypes.OBJECT>
+    | TypeObj<EntityTypes.ARRAY>
+    | TypeObj<EntityTypes.INTEGER>
+    | TypeObj<EntityTypes.STRING>
+    | TypeObj<EntityTypes.BOOLEAN>
+
+export interface ApiDocs_Path_Method_Response {
+    description: string,
+    schema?: TypeObj__Type,
+}
+export interface ApiDocs_Path_Method {
+    responses: ApiDocs_Path_Method_Response[],
+}
+export interface ApiDocs_Path {
+    [key: string]: ApiDocs_Path_Method,
+}
+export interface ApiDocs {
+    definitions: TypeObj__Type[],
+    paths: ApiDocs_Path[],
+}
