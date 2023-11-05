@@ -10,6 +10,7 @@ module.exports = {
         background: './src/background',
         popup: './src/popup',
         content: './src/content',
+        page: './src/page',
     },
     output: {
         path: path.resolve(__dirname, 'dist'),

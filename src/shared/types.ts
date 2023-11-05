@@ -10,6 +10,7 @@ export const EntityTypesToTypescript = {
     integer: "number",
     boolean: "boolean",
     string: "string",
+    number: "number"
 }
 
 export enum EntityInteger_Formats {
@@ -24,8 +25,8 @@ export enum EntityString_Formats {
 export interface EntityObject_Properties extends Record<string, Entity__Type> {}
 export interface EntityObject {
     // required: keyof EntityObject_Properties,
-    properties?: EntityObject_Properties,
-    title: string,
+    // properties?: EntityObject_Properties,
+    // title: string,
 }
 
 export interface EntityArray {
@@ -54,6 +55,10 @@ export type EntityTypeMap = {
 
 export type Entity <T = EntityTypes> = {
     type: T,
+    properties?: EntityObject_Properties,
+    title?: string,
+    allOf?: Entity__Type[],
+    additionalProperties?: Entity__Type,
 } & (T extends keyof EntityTypeMap ? EntityTypeMap[T] : {})
 
 export type Entity__Type = Entity<EntityTypes.OBJECT>
@@ -62,13 +67,12 @@ export type Entity__Type = Entity<EntityTypes.OBJECT>
 | Entity<EntityTypes.STRING>
 | Entity<EntityTypes.BOOLEAN>
 
-
 export interface Field {
     name: string,
     type: string,
     typeName: string,
+    code?: string,
 }
-
 export interface TypeObjObject {
     fields: Field[],
 }

@@ -1,7 +1,4 @@
 import './style.scss';
-import {getTypescript, resolveJSONReference} from "../shared/utils";
-import {Entity__Type} from "../shared/types";
-import {leftHtml} from "./utils";
 
 import {callbacks} from "./onMessage";
 
@@ -19,8 +16,8 @@ chrome.runtime.onMessage.addListener(async(message: { action: string, args: any[
     }
 });
 
-// chrome.runtime.onMessage.addListener(async (message) => {
-//     console.log("MESSAGE")
-//     // @ts-ignore
-//     start(...message.args)
-// })
+const start = () => {
+    chrome.runtime.sendMessage({ action: 'SWGTS_start', args: [] });
+}
+
+start();

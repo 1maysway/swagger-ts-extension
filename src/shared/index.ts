@@ -9,6 +9,4 @@ axios.get('https://dnevnik-dev-k8s.mos.ru/sw/plan/v2/api-docs').then(async (res)
         camelCase: true,
         export: true,
     });
-
-    console.log(a);
 })

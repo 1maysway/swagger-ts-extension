@@ -1,4 +1,5 @@
 import {
+    Entity,
     Entity__Type,
     EntityString_Formats,
     EntityTypes,
@@ -10,7 +11,7 @@ import {
 import {STRS as S} from "./constants";
 
 
-interface JsonData {
+export interface JsonData {
     [key: string]: any;
 }
 export const resolveJSONReference = (data: JsonData, rootData: JsonData): JsonData => {
@@ -41,6 +42,7 @@ export const resolveJSONReference = (data: JsonData, rootData: JsonData): JsonDa
 }
 
 const getArrayBrackets = (number: number) => Array(number).fill('[]').join('');
+export const leftHtml = (str: string) => str.replace(/<[^>]*>/g, '');
 
 const areArraysEqual = <T>(arr1: T[], arr2: T[]) => {
     if (arr1.length !== arr2.length) {
@@ -77,7 +79,11 @@ const generateRandomString = (length: number, uppercase = false) => {
 
 const getEnumFieldString = (str: string) => `${S.T}${str} = '${str}',${S.N}`;
 
-const getObjectFieldString = (f: Field) => `${S.T}${f.name}${S.С}${f.typeName},${S.N}`;
+const getObjectFieldString = (f: Field) => {
+    const content = f.code || `${f.typeName},${S.N}`;
+    const res = `${S.T}${f.name}${S.С}${content}`;
+    return res;
+};
 const toCamelCase = (str: string) => {
     return str.replace(/_(\w)|\[(\d+)\]/g, function (match, group1, group2) {
         if (group1) {
@@ -92,61 +98,57 @@ const toCamelCase = (str: string) => {
 export interface getTsStringOptions {
     export?: boolean,
     camelCase?: boolean,
+    init?: boolean,
 }
 
-export const getTypescript = (schema: Entity__Type, formatOptions: getTsStringOptions = {}) => {
-    const getTsString = (typeObj: TypeObj__Type) => {
+export const getTypescript = (schema: Entity__Type, formatOptions?: getTsStringOptions) => {
+    const getTsString = (typeObj: TypeObj__Type, options?: getTsStringOptions) => {
         const exp = `${formatOptions?.export ? S.EXP : ''}`;
 
         if (typeObj.type === EntityTypes.STRING) {
             if (typeObj.enum) {
-                const str = `${exp}enum ${typeObj.name} {${S.N}${typeObj.enum.map(getEnumFieldString).join('')}}`;
+                const init = `${exp}enum ${typeObj.name} `;
+                const str = `${options?.init ? init : ''}{${S.N}${typeObj.enum.map(getEnumFieldString).join('')}}${options?.init ? '' : `,${S.N}`}`;
                 return str;
             }
         }
 
         if (typeObj.type === EntityTypes.OBJECT) {
-            const str = `${exp}interface ${typeObj.name} {${S.N}${typeObj.fields.map(getObjectFieldString).join('')}}`;
+            const init = `${exp}interface ${typeObj.name} `;
+            const str = `${options?.init ? init : ''}{${typeObj.fields.length ? S.N : ''}${typeObj.fields.map(getObjectFieldString).join('')}}${options?.init ? '' : `,${S.N}`}`;
             return str;
         }
 
         if (typeObj.type === EntityTypes.ARRAY) {
-            const str = `${exp}type ${typeObj.name} = ${typeObj.typeName};`;
+            const init = `${exp}type ${typeObj.name} = `;
+            const str = `${options?.init ? init : ''}${typeObj.typeName}${options?.init ? ';' : `,${S.N}`}`;
             return str;
         }
-
-        console.log(typeObj)
 
         return null;
     }
     const getTypeName = (entity: Entity__Type, count: number = 0): string => {
         let name;
 
-        switch (entity.type) {
-            case EntityTypes.OBJECT: {
-                name = entity.title + getArrayBrackets(count);
-                break;
-            }
-            case EntityTypes.ARRAY: {
-                name = getTypeName(entity.items, count + 1);
-                break;
-            }
-            default: {
-                name = EntityTypesToTypescript[entity.type] + getArrayBrackets(count);
-            }
-        }
+       if (entity.type === EntityTypes.OBJECT || entity.properties) {
+           name = entity.title ? entity.title + getArrayBrackets(count) : null;
+       } else if (entity.type === EntityTypes.ARRAY) {
+           name = getTypeName(entity.items, count + 1);
+       } else {
+           const enityType = EntityTypesToTypescript[entity.type];
+           name = enityType ? enityType + getArrayBrackets(count) : null;
+       }
 
-        return prettifyName(name);
+        return name ? prettifyName(name) : name;
     }
     const typeObjsToString = (typeObjs: TypeObj__Type[]) => {
-        return typeObjs.map(to => getTsString(to)).join('\n\n');
+        return typeObjs.map(to => getTsString(to, formatOptions)).join('\n\n');
     }
     const prettifyName = (name: string) => {
         let str = name.split(/[.]/).join('_');
 
         if (formatOptions.camelCase) {
             str = toCamelCase(str);
-            console.log(str)
         }
         return str;
     };
@@ -159,13 +161,12 @@ export const getTypescript = (schema: Entity__Type, formatOptions: getTsStringOp
         typeObj && !typeObjs.some(to => to.name === typeObj.name) && typeObjs.push(typeObj);
     }
 
-    const doesTbExist = (entity: Entity__Type): TypeObj | null => {
+    const doesTbExist = (entity: Entity__Type): TypeObj__Type | null => {
         switch (entity.type) {
             case EntityTypes.OBJECT: {
                 return typeObjs.find(to => to.name === entity.title) || null
             }
             case EntityTypes.STRING: {
-                console.log(entity.type)
                 if (entity.enum) {
                     return (typeObjs
                         .filter(to => to.type === EntityTypes.STRING) as TypeObj<EntityTypes.STRING>[])
@@ -177,40 +178,41 @@ export const getTypescript = (schema: Entity__Type, formatOptions: getTsStringOp
         }
     };
 
-    const toTypeObj = (entity: Entity__Type, autoPush = true, count = 0): TypeObj | null => {
-        if (entity.type === EntityTypes.OBJECT && count === 0) {
-
+    const toTypeObj = (entity: Entity__Type, autoPush = true, count = 0): TypeObj__Type | null => {
+        if ((entity.type === EntityTypes.OBJECT || entity.properties || entity.additionalProperties) && count === 0) {
             const tbExists = doesTbExist(entity)
 
             if (tbExists) {
                 return tbExists;
             }
 
-            if (!entity.properties) {
-                return null;
-            }
-
             const typeObj: TypeObj<EntityTypes.OBJECT> = {
-                type: entity.type,
+                type: EntityTypes.OBJECT,
                 fields: [],
-                name: prettifyName(entity.title),
+                name: entity.title ? prettifyName(entity.title) : undefined,
             }
 
-            const fields: Field[] = Object.entries(entity.properties).map(([key, val]) => {
+            const fields: Field[] = Object.entries(entity.properties || {}).map(([key, val]) => {
                 const tto = toTypeObj(val)
                 const typeName = tto?.name || tto?.typeName || getTypeName(val);
-
                 const field: Field = {
                     name: prettifyName(key),
                     type: val.type,
-                    typeName: typeName,
+                    typeName: typeName || val.type,
+                    code: typeName ? undefined : tto ? getTsString(tto) : val.type
                 }
 
                 return field;
             });
 
-            typeObj.fields = fields;
-            autoPush && pushToTypesObjs(typeObj);
+            const additionalField: Field = entity.additionalProperties && {
+                name: `[key: string]`,
+                type: entity.additionalProperties.type,
+                typeName: (entity.additionalProperties ? getTypeName(entity.additionalProperties) : entity.additionalProperties.type) || entity.additionalProperties.type,
+            }
+
+            typeObj.fields = [...fields, additionalField].filter(Boolean);
+            autoPush && typeObj.name && pushToTypesObjs(typeObj);
 
             return typeObj;
         } else if (entity.type === EntityTypes.STRING && entity.enum && count === 0) {
@@ -235,15 +237,41 @@ export const getTypescript = (schema: Entity__Type, formatOptions: getTsStringOp
                 typeName: 'number[]',
             }
             return typeObj;
+        } else if (entity.allOf) {
+            const tbExists = doesTbExist(entity)
+
+            if (tbExists) {
+                return tbExists;
+            }
+
+            const typeObj: TypeObj<EntityTypes.OBJECT> = {
+                type: EntityTypes.OBJECT,
+                fields: [],
+                name: prettifyName(entity.title),
+            }
+
+            const fields: Field[] = entity.allOf.reduce<Field[]>((pv, cv) => {
+                const tpbj = toTypeObj(cv) as TypeObj<EntityTypes.OBJECT>;
+                pv.push(...tpbj.fields);
+                return pv;
+            }, [])
+
+            typeObj.fields = fields;
+            autoPush && pushToTypesObjs(typeObj);
+
+            return typeObj;
         } else if (entity.type === EntityTypes.ARRAY) {
             return toTypeObj(entity.items, true,count + 1);
         } else if (count > 0) {
             const ent = toTypeObj(entity);
 
+            const entType = ent?.name || ent?.type || entity.type;
+            const typeName = getTypeName(entity, count) || (entType + getArrayBrackets(count));
+
             const typeObj: TypeObj__Type = {
                 type: EntityTypes.ARRAY,
-                typeName: getTypeName(entity, count),
-                arrayType: ent?.name || ent?.type || entity.type,
+                typeName,
+                arrayType: entType,
             }
 
             return typeObj;
