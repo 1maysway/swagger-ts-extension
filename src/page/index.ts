@@ -48,7 +48,8 @@ const start = async (other: Other) => {
     const getSchema = (info: ResponseInfo) => {
         try {
             return docs.paths[info.path][info.method].responses[info.status].schema
-                || docs.paths[info.path][info.method]?.responses[info.status]?.content['application/json']?.schema;
+                // @ts-ignore
+                || Object.values(docs.paths[info.path][info.method]?.responses[info.status]?.content)[0].schema;
         } catch (e) {
             return null;
         }

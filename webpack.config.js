@@ -8,7 +8,7 @@ module.exports = {
     devtool: 'inline-source-map',
     entry: {
         background: './src/background',
-        popup: './src/popup',
+        // popup: './src/popup',
         content: './src/content',
         page: './src/page',
     },
