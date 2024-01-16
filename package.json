@@ -1,7 +1,6 @@
 {
   "name": "swagger-ts-extension",
-  "version": "1.0.1",
-  "main": "src/shared/index.ts",
+  "version": "1.0.2",
   "license": "MIT",
   "dependencies": {
     "@types/webextension-polyfill": "^0.10.4",
@@ -9,7 +8,6 @@
     "timers-browserify": "^2.0.12"
   },
   "scripts": {
-    "start": "yarn ts-node src/shared/index.ts",
     "build:dev": "npx webpack --config webpack.config.js --mode=development",
     "build": "npx webpack --config webpack.config.js"
   },

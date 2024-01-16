@@ -3,7 +3,7 @@ import { callbacks } from './onMessage';
 
 chrome.runtime.onMessage.addListener(async(message: { action: string, args: any[] }, sender, sendResponse) => {
     try {
-        if (!message.action.includes('SWGTS_')) return;
+        if (!message.action.startsWith('SWGTS_')) return;
 
         const func = callbacks[message.action.slice(6)];
 

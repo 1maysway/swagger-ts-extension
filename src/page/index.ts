@@ -47,7 +47,7 @@ const start = async (other: Other) => {
 
     const getSchema = (info: ResponseInfo) => {
         try {
-            return docs.paths[info.path][info.method].responses[info.status].schema
+            return docs.paths[info.path.replace(/\u200B/g,'')][info.method].responses[info.status].schema
                 // @ts-ignore
                 || Object.values(docs.paths[info.path][info.method]?.responses[info.status]?.content)[0].schema;
         } catch (e) {
@@ -223,8 +223,6 @@ const start = async (other: Other) => {
         if (!BLOCKS[info.id].open) {
             return;
         }
-
-        const targetElement = event.target as HTMLElement;
 
         await delay(100);
 

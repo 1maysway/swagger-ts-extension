@@ -81,7 +81,7 @@ export interface TypeObjArray {
 }
 export interface TypeObjInteger {}
 export interface TypeObjString {
-    enum?: string[],
+    enum?: (string | number)[],
 }
 export interface TypeObjBoolean {}
 

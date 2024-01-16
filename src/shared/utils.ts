@@ -1,5 +1,4 @@
 import {
-    Entity,
     Entity__Type,
     EntityString_Formats,
     EntityTypes,
@@ -77,12 +76,11 @@ const generateRandomString = (length: number, uppercase = false) => {
     return result;
 }
 
-const getEnumFieldString = (str: string) => `${S.T}${str} = '${str}',${S.N}`;
+const getEnumFieldString = (str: string | number) => `${S.T}${typeof str === 'number' ? '_' + str : str} = '${str}',${S.N}`;
 
 const getObjectFieldString = (f: Field) => {
     const content = f.code || `${f.typeName},${S.N}`;
-    const res = `${S.T}${f.name}${S.С}${content}`;
-    return res;
+    return `${S.T}${f.name}${S.С}${content}`;
 };
 const toCamelCase = (str: string) => {
     return str.replace(/_(\w)|\[(\d+)\]/g, function (match, group1, group2) {
@@ -127,7 +125,7 @@ export const getTypescript = (schema: Entity__Type, formatOptions?: getTsStringO
 
         return null;
     }
-    const getTypeName = (entity: Entity__Type, count: number = 0): string => {
+    const getTypeName = (entity: Entity__Type, count: number = 0): string | null => {
         let name;
 
        if (entity.type === EntityTypes.OBJECT || entity.properties) {
@@ -186,13 +184,19 @@ export const getTypescript = (schema: Entity__Type, formatOptions?: getTsStringO
                 return tbExists;
             }
 
+            const additionalField: Field = entity.additionalProperties && {
+                name: `[key: string]`,
+                type: entity.additionalProperties.type,
+                typeName: (entity.additionalProperties ? getTypeName(entity.additionalProperties) : entity.additionalProperties.type) || entity.additionalProperties.type,
+            }
+
             const typeObj: TypeObj<EntityTypes.OBJECT> = {
                 type: EntityTypes.OBJECT,
-                fields: [],
+                fields: additionalField ? [additionalField] : [],
                 name: entity.title ? prettifyName(entity.title) : undefined,
             }
 
-            const fields: Field[] = Object.entries(entity.properties || {}).map(([key, val]) => {
+            Object.entries(entity.properties || {}).forEach(([key, val]) => {
                 const tto = toTypeObj(val)
                 const typeName = tto?.name || tto?.typeName || getTypeName(val);
                 const field: Field = {
@@ -202,17 +206,12 @@ export const getTypescript = (schema: Entity__Type, formatOptions?: getTsStringO
                     code: typeName ? undefined : tto ? getTsString(tto) : val.type
                 }
 
+                typeObj.fields.unshift(field);
+
+                autoPush && typeName && pushToTypesObjs(typeObj);
+
                 return field;
             });
-
-            const additionalField: Field = entity.additionalProperties && {
-                name: `[key: string]`,
-                type: entity.additionalProperties.type,
-                typeName: (entity.additionalProperties ? getTypeName(entity.additionalProperties) : entity.additionalProperties.type) || entity.additionalProperties.type,
-            }
-
-            typeObj.fields = [...fields, additionalField].filter(Boolean);
-            autoPush && typeObj.name && pushToTypesObjs(typeObj);
 
             return typeObj;
         } else if (entity.type === EntityTypes.STRING && entity.enum && count === 0) {
